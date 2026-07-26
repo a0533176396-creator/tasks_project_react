@@ -1,0 +1,25 @@
+.signin-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 20px;
+}
+.signin-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  text-align: center;
+  background: #fff;
+}
+.signin-card h1 {
+  margin: 0 0 18px 0;
+  font-size: 20px;
+}
+.signin-note {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #666;
+}
