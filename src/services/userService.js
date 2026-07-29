@@ -53,3 +53,53 @@ export const addNewUser = async (userData) => {
     throw error;
   }
 };
+
+/**
+ * Logins a user.
+ */
+export const loginUser = async (username, password) => {
+  try {
+    // פיצול רצף השם לשם פרטי ושם משפחה
+    const nameParts = (username || '').trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    const response = await fetch(`${API_BASE_URL}/Users/ValidateUserFullNameAndPassword`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // השרת דורש במפורש את השדות FirstName ו-LastName בלי קו תחתון
+      body: JSON.stringify({ 
+        Id: 0,
+        FirstName: firstName, 
+        LastName: lastName,
+        First_name: firstName, 
+        Last_name: lastName,   
+        Password: password,
+        Email: 'dummy@email.com',
+        sub: 'dummy-sub',
+        Wont_help: true
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server returned status:', response.status, 'Body:', errorText);
+      throw new Error(`Failed to validate user. Server says: ${errorText}`);
+    }
+
+    const isValid = await response.json();
+    
+    // אם השרת החזיר false אז המשתמש לא נמצא או שהסיסמה שגויה
+    if (!isValid) {
+      throw new Error('User not found or incorrect credentials');
+    }
+
+    // ה-API מחזיר בוליאני, לכן נחזיר אובייקט בסיסי לטובת האפליקציה
+    return { name: username, isAuthenticated: true };
+  } catch (error) {
+    console.error('Error logging in:', error);
+    throw error;
+  }
+};

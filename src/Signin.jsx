@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { getUserById, addNewUser } from './services/userService'
+import React, { useEffect, useState } from 'react'
+import { getUserById, addNewUser, loginUser } from './services/userService'
 import './Signin.css'
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -15,7 +15,33 @@ function decodeJwt(credential) {
   }
 }
 
-export default function Signin() {
+export default function Signin({ onSignInSuccess, onNavigateToRegister }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [showRegisterOptions, setShowRegisterOptions] = useState(false);
+  const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
+
+  const handleLocalLogin = async (e) => {
+    e.preventDefault();
+    try {
+      setLoginError('');
+      setShowRegisterOptions(false);
+      setPendingGoogleUser(null);
+      const user = await loginUser(username, password);
+      if (onSignInSuccess) onSignInSuccess(user);
+    } catch(err) {
+      setLoginError('שם המשתמש או הסיסמה אינם קיימים במערכת.');
+      setShowRegisterOptions(true);
+    }
+  };
+
+  const handleRegisterOption = async (type) => {
+     if (onNavigateToRegister) {
+       onNavigateToRegister({ type, pendingGoogleUser });
+     }
+  };
+
   useEffect(() => {
     const script = document.createElement('script')
     script.src = 'https://accounts.google.com/gsi/client'
@@ -27,38 +53,24 @@ export default function Signin() {
           client_id: CLIENT_ID,
           callback: async (response) => {
             const user = decodeJwt(response.credential)
-            debugger
-            console.log("Decoded user:", user); // הדפסה לדיבאגינג
-            console.log("response.credential:", response.credential); // הדפסה של ה-Token גם כן
             if (user) {
               try {
-                // הזדהות מול השרת מתבצעת כעת לפי המזהה הייחודי של גוגל (sub)
-                console.log("Attempting to fetch user with sub:", user.sub);
                 const userFromDb = await getUserById(user.sub);
-                console.log("Response from getUserById:", userFromDb);
-                console.log("Type of userFromDb:", typeof userFromDb);
-                console.log("Is userFromDb truthy?", !!userFromDb);
-                
                 if (userFromDb) {
-                  alert(`ברוך הבא ${user.name}`);
+                  setLoginError('');
+                  setShowRegisterOptions(false);
+                  if (onSignInSuccess) onSignInSuccess({ ...userFromDb, name: user.name });
                 } else {
                   throw new Error('User not found');
                 }
               } catch (error) {
-                console.error("Error in try block:", error);
-                // המשתמש לא נמצא (השרת החזיר 404 או שגיאה דומה), אז ניצור אותו כעת
-                try {
-                  const newUser = {
-                    googleId: user.sub,
-                    email: user.email,
-                    name: user.name
-                    // תוכל להוסיף כאן שדות נוספים אם השרת דורש (למשל תמונת פרופיל: user.picture)
-                  };
-                  await addNewUser(newUser);
-                  alert(`נרשמת בהצלחה! ברוך הבא ${user.name}`);
-                } catch (addError) {
-                  alert('אירעה שגיאה בעת ההרשמה למערכת');
-                }
+                setPendingGoogleUser({
+                  googleId: user.sub,
+                  email: user.email,
+                  name: user.name
+                });
+                setLoginError('המשתמש לא נמצא במערכת לאחר הזדהות בגוגל.');
+                setShowRegisterOptions(true);
               }
             }
           }
@@ -77,10 +89,50 @@ export default function Signin() {
 
   return (
     <div className="signin-root">
-      <div className="signin-card">
-        <h1>Sign in with Google</h1>
-        <div id="g_id_signin" />
-        {/* <p className="signin-note">Replace the CLIENT_ID in <strong>src/Signin.jsx</strong> with your Google OAuth client ID.</p> */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="signin-container">
+          <div className="signin-card local-signin">
+            <h1>כניסה לאתר</h1>
+            <form onSubmit={handleLocalLogin} className="local-login-form">
+              <input 
+                type="text" 
+                placeholder="שם משתמש" 
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)} 
+                required
+              />
+              <input 
+                type="password" 
+                placeholder="סיסמה" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button type="submit">היכנס</button>
+            </form>
+          </div>
+          <div className="signin-divider">או</div>
+          <div className="signin-card google-signin">
+            <h1>כניסה עם גוגל</h1>
+            <div id="g_id_signin" />
+          </div>
+        </div>
+        
+        {loginError && (
+          <div className="login-error-message" style={{ marginTop: '20px', textAlign: 'center', background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', width: '100%', maxWidth: '600px'}}>
+            <p>{loginError}</p>
+            {showRegisterOptions && (
+              <div className="register-options">
+                <p>אנא בחר אחת מהאפשרויות הבאות להרשמה:</p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <button onClick={() => handleRegisterOption('חינמי')}>חינמי</button>
+                  <button onClick={() => handleRegisterOption('רגיל')}>רגיל</button>
+                  <button onClick={() => handleRegisterOption('פרימיום')}>פרימיום</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

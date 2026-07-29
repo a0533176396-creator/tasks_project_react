@@ -1,0 +1,124 @@
+.register-root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 20px;
+  direction: rtl;
+}
+
+.register-container {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.register-container h1 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 5px;
+  font-size: 24px;
+}
+
+.package-info {
+  text-align: center;
+  color: #555;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.back-btn:hover {
+  text-decoration: underline;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.register-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: right;
+}
+
+.register-form label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+.register-form input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.credit-card-section {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+  border: 1px solid #e1e4e8;
+}
+
+.credit-card-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.card-details-row {
+  display: flex;
+  gap: 15px;
+}
+
+.card-details-row .form-group {
+  flex: 1;
+}
+
+.submit-btn {
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #218838;
+}
+
+.submit-btn:disabled {
+  background-color: #a8d5b3;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #d9534f;
+  text-align: center;
+  font-size: 14px;
+  margin-top: 5px;
+}
