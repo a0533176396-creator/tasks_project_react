@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getUserById, addNewUser, loginUser } from './services/userService'
+import { getUserById, addNewUser, loginUser, getUserByFullName } from './services/userService'
 import './Signin.css'
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -29,7 +29,20 @@ export default function Signin({ onSignInSuccess, onNavigateToRegister }) {
       setShowRegisterOptions(false);
       setPendingGoogleUser(null);
       const user = await loginUser(username, password);
-      if (onSignInSuccess) onSignInSuccess(user);
+      // try to resolve full user record (id etc.) by name
+      try {
+        const nameParts = (username || '').trim().split(' ')
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+        const full = await getUserByFullName(firstName, lastName)
+        if (full) {
+          if (onSignInSuccess) onSignInSuccess({ ...full, name: username })
+        } else {
+          if (onSignInSuccess) onSignInSuccess(user)
+        }
+      } catch (e) {
+        if (onSignInSuccess) onSignInSuccess(user)
+      }
     } catch(err) {
       setLoginError('שם המשתמש או הסיסמה אינם קיימים במערכת.');
       setShowRegisterOptions(true);

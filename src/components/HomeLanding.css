@@ -1,0 +1,25 @@
+.home-landing{
+  display:flex;
+  justify-content:center;
+  padding:40px 16px;
+}
+.landing-card{
+  max-width:900px;
+  background:linear-gradient(180deg, #ffffff, #fbfdff);
+  border:1px solid #e6eef8;
+  padding:28px 32px;
+  border-radius:10px;
+  box-shadow:0 6px 18px rgba(32,42,60,0.06);
+  direction:rtl;
+  line-height:1.6;
+}
+.landing-card h1{font-size:28px;margin-bottom:12px}
+.landing-card h2{font-size:20px;margin-top:18px;margin-bottom:8px}
+.landing-card h3{font-size:16px;margin-top:12px;margin-bottom:6px}
+.landing-card p{color:#222;margin-bottom:10px}
+.landing-card ul{margin-left:16px;margin-bottom:10px}
+.cta-row{display:flex;align-items:center;gap:14px;margin-top:18px}
+.primary-cta{
+  background:#007bff;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600
+}
+.primary-cta:hover{opacity:0.95}

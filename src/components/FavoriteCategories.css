@@ -1,0 +1,53 @@
+.favorite-page { max-width: none; width:75vw; margin:12px auto; padding:12px; direction: rtl; }
+.fc-top-row { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
+.fc-add { position:relative; display:flex; gap:8px; align-items:center; }
+.fc-add input { padding:8px; min-width:260px; border-radius:6px; border:1px solid #ccc; }
+.fc-add button { padding:8px 12px; border-radius:6px; cursor:pointer; }
+.fc-suggestions { position:absolute; top:40px; left:0; background:#fff; border:1px solid #ddd; box-shadow:0 2px 6px rgba(0,0,0,0.08); z-index:40; width:100%; max-height:180px; overflow:auto; }
+.fc-suggestion { padding:8px; cursor:pointer; }
+.fc-suggestion:hover { background:#f2f2f2; }
+
+.fc-content { display:flex; gap:16px; }
+.fc-tree { flex:1 1 72%; padding:12px; border:1px solid #eee; border-radius:6px; max-height:78vh; overflow:auto; }
+.fc-favs { flex:0 0 26%; padding:12px; border:1px solid #eee; border-radius:6px; max-height:78vh; overflow:auto; }
+
+.fc-node { padding:6px 8px; }
+.fc-node-label { display:flex; align-items:center; gap:8px; cursor:pointer; }
+.fc-node-name { font-size:15px; }
+.fc-fav-btn { background: transparent; border: none; font-size: 18px; line-height: 1; cursor: pointer; color: #999; padding: 0 6px; }
+.fc-fav-btn:hover { color: #ffb400; }
+.fc-fav-on { color: #ffb400; text-shadow: 0 0 6px rgba(255,180,0,0.2); }
+
+/* Simple modal styles for confirmation dialogs */
+.fc-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.fc-modal { background: #fff; border-radius: 10px; padding: 18px; min-width: 300px; max-width: 92%; box-shadow: 0 8px 24px rgba(0,0,0,0.2); direction: rtl; text-align: right; }
+.fc-modal h4 { margin: 0 0 8px; font-size: 16px; }
+.fc-modal p { margin: 6px 0 0; }
+.fc-modal .fc-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.fc-modal .fc-btn { padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+.fc-btn-danger { background: #d9534f; color: #fff; border: none; }
+.fc-btn-cancel { background: #f0f0f0; border: 1px solid #ccc; }
+.fc-children { margin-right:18px; border-right:1px dashed #eee; padding-right:8px; }
+.fc-message { margin:8px 0; color:#0a6; }
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+	.favorite-page { width:98%; padding:10px; }
+	.fc-top-row { flex-direction: column; align-items: stretch; }
+	.fc-add { width:100%; }
+	.fc-suggestions { left: 0; right: 0; width: auto; }
+	.fc-content { flex-direction: column; }
+	.fc-tree { flex: 1 1 100%; width: 100%; max-height: 50vh; }
+	.fc-favs { flex: 1 1 100%; width: 100%; max-height: 30vh; margin-top: 12px; }
+	.fc-children { margin-right: 12px; padding-right: 6px; }
+}
+
+@media (max-width: 480px) {
+	.favorite-page { padding:8px; }
+	.fc-top-row { gap:8px; }
+	.fc-add input { min-width: 160px; }
+	.fc-node-name { font-size: 14px; }
+	.fc-suggestion { padding:6px; }
+	.fc-tree, .fc-favs { padding:8px; }
+	button { font-size: 13px; }
+}

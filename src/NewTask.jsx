@@ -1,224 +1,193 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { addNewTask, addTaskFile } from './services/taskService';
-import { getAllCategories } from './services/categoryService';
-import './NewTask.css';
+import React, { useEffect, useState, useRef } from 'react'
+import './NewTask.css'
+import { getAllCategories, createCategory } from './services/categoryService'
 
-export default function NewTask({ user }) {
-  const [taskName, setTaskName] = useState('');
-  const [description, setDescription] = useState('');
-  const [allCategories, setAllCategories] = useState([]);
-  const [parentCategoryId, setParentCategoryId] = useState('');
-  const [childCategoryId, setChildCategoryId] = useState('');
-  const [file, setFile] = useState(null);
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+export default function NewTask({ user, onCreated }) {
+  const [taskName, setTaskName] = useState('')
+  const [description, setDescription] = useState('')
+  const [allCategories, setAllCategories] = useState([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+  const [taskDate, setTaskDate] = useState(() => new Date().toISOString().slice(0,16))
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [addingMain, setAddingMain] = useState('')
+  const [addingSubFor, setAddingSubFor] = useState(null)
+  const [addingSubName, setAddingSubName] = useState('')
+  const [createMessage, setCreateMessage] = useState('')
+  const tempIdRef = useRef(-1)
 
-  const getCategoryId = (category) => category?.id ?? category?.Id;
-  const getCategoryName = (category) => category?.name ?? category?.Name;
-  const getFatherId = (category) => category?.father_id ?? category?.fatherId ?? category?.FatherId ?? null;
+  const API_BASE = 'https://localhost:44354/api'
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      setIsCategoriesLoading(true);
-      try {
-        const categories = await getAllCategories();
-        setAllCategories(categories);
+  const loadCategories = async () => {
+    try {
+      const cats = await getAllCategories()
+      setAllCategories(cats || [])
+    } catch (e) { console.error('load categories', e); setAllCategories([]) }
+  }
 
-        const parents = categories.filter((c) => getFatherId(c) == null);
-        if (parents.length > 0) {
-          const firstParentId = String(getCategoryId(parents[0]));
-          setParentCategoryId(firstParentId);
+  useEffect(() => { loadCategories() }, [])
 
-          const firstChild = categories.find(
-            (c) => String(getFatherId(c)) === firstParentId
-          );
-          setChildCategoryId(firstChild ? String(getCategoryId(firstChild)) : '');
-        }
-      } catch {
-        setErrorMessage('לא ניתן לטעון קטגוריות מהשרת.');
-      } finally {
-        setIsCategoriesLoading(false);
-      }
-    };
-
-    loadCategories();
-  }, []);
-
-  const parentCategories = useMemo(
-    () => allCategories.filter((c) => getFatherId(c) == null),
-    [allCategories]
-  );
-
-  const childCategories = useMemo(
-    () => allCategories.filter((c) => String(getFatherId(c)) === String(parentCategoryId)),
-    [allCategories, parentCategoryId]
-  );
-
-  const selectedCategoryId = childCategoryId || parentCategoryId;
-
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  const handleCreateMain = async () => {
+    if (!addingMain.trim()) return
+    // optimistic add: show immediately with temporary negative id
+    const tempId = tempIdRef.current--
+    const tempCat = { Id: tempId, Name: addingMain, father_id: null }
+    setAllCategories(prev => [tempCat, ...prev])
+    setSelectedCategoryId(String(tempId))
+    setAddingMain('')
+    setCreateMessage('נוסף זמנית ברשימה...')
+    try {
+      const created = await createCategory(addingMain.trim(), null)
+      // replace temp with created (if created returned)
+      const newId = created?.Id ?? created?.id
+      setAllCategories(prev => prev.map(c => ((c.Id ?? c.id) === tempId ? (created || { Id: newId, Name: addingMain }) : c)))
+      if (newId) setSelectedCategoryId(String(newId))
+      setCreateMessage('הקטגוריה הראשית נוספה בהצלחה')
+    } catch (e) {
+      console.error('create main category failed', e)
+      // remove temp
+      setAllCategories(prev => prev.filter(c => (c.Id ?? c.id) !== tempId))
+      setError('שגיאה ביצירת קטגוריה ראשית: ' + (e.message || e))
     }
-  };
+  }
+
+  const handleCreateSub = async (parentId) => {
+    if (!addingSubName.trim()) return
+    // optimistic add for subcategory
+    const tempId = tempIdRef.current--
+    const tempCat = { Id: tempId, Name: addingSubName, father_id: parentId }
+    setAllCategories(prev => [tempCat, ...prev])
+    setSelectedCategoryId(String(tempId))
+    setAddingSubName('')
+    setAddingSubFor(null)
+    setCreateMessage('תת-הקטגוריה נוספה זמנית...')
+    try {
+      const created = await createCategory(addingSubName.trim(), parentId)
+      const newId = created?.Id ?? created?.id
+      setAllCategories(prev => prev.map(c => ((c.Id ?? c.id) === tempId ? (created || { Id: newId, Name: addingSubName, father_id: parentId }) : c)))
+      if (newId) setSelectedCategoryId(String(newId))
+      setCreateMessage('תת-הקטגוריה נוספה בהצלחה')
+    } catch (e) {
+      console.error('create subcategory failed', e)
+      setAllCategories(prev => prev.filter(c => (c.Id ?? c.id) !== tempId))
+      setError('שגיאה ביצירת תת קטגוריה: ' + (e.message || e))
+    }
+  }
+
+  const parentList = allCategories.filter(c => (c.father_id ?? c.fatherId) == null)
+  const childrenOf = (pid) => allCategories.filter(c => String(c.father_id ?? c.fatherId) === String(pid))
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setErrorMessage('');
-    setSuccessMessage('');
+    e.preventDefault()
+    setError('')
+    if (!user || (!user.id && !user.Id)) { setError('אין מזהה משתמש'); return }
+    const uid = user.id ?? user.Id
+    const cat = allCategories.find(c => (c.Id ?? c.id)?.toString() === selectedCategoryId?.toString()) || {}
+    const dto = {
+      Id: 0,
+      Title: taskName || 'משימה',
+      Task_Date: new Date(taskDate).toISOString(),
+      user_id: uid,
+      user_first_name: user.user_first_name ?? user.firstName ?? user.name?.split?.(' ')?.[0] ?? '',
+      user_last_name: user.user_last_name ?? user.lastName ?? user.name?.split?.(' ')?.slice(1).join(' ') ?? '',
+      CategoryId: parseInt(selectedCategoryId || (cat.Id ?? cat.id) || 0),
+      CategoryName: cat.Name ?? cat.name ?? '',
+      color: cat.Color ?? cat.color ?? ''
+    }
 
     try {
-      // 1. צור את המשימה קודם כל
-      // התאמה למבנה tasks מה-DAL: Id, Title, Task_Date, user_id, CategoryId
-      const newTask = {
-        Title: taskName,
-        Task_Date: new Date().toISOString(), // תאריך יצירת המשימה
-        user_id: user?.id ?? user?.Id ?? user?.userId ?? user?.UserId ?? 0,
-        user_first_name: user?.name || user?.user_first_name || '',
-        user_last_name: user?.user_last_name || '',
-        CategoryId: parseInt(selectedCategoryId, 10), // מזהה הקטגוריה שנבחרה
-        CategoryName: '',
-        color: ''
-      };
-
-      const createdTask = await addNewTask(newTask);
-      console.log('Task creation results:', createdTask);
-      
-      const newTaskId = createdTask?.id ?? createdTask?.Id;
-
-      // 2. אם נבחר קובץ ונוצרה המשימה, נעלה את הקובץ
-      if (file && newTaskId) {
-        await addTaskFile(newTaskId, file);
-        console.log('File uploaded successfully');
-      }
-
-      setSuccessMessage('המשימה נוצרה בהצלחה!');
-      // ניקוי הטופס
-      setTaskName('');
-      setDescription('');
-      if (parentCategories.length > 0) {
-        const firstParentId = String(getCategoryId(parentCategories[0]));
-        setParentCategoryId(firstParentId);
-        const firstChild = allCategories.find(
-          (c) => String(getFatherId(c)) === firstParentId
-        );
-        setChildCategoryId(firstChild ? String(getCategoryId(firstChild)) : '');
-      } else {
-        setParentCategoryId('');
-        setChildCategoryId('');
-      }
-      setFile(null);
-      e.target.reset(); // לאיפוס שדה הקובץ
-      
-    } catch (error) {
-      console.error('Error creating task:', error);
-      setErrorMessage('אירעה שגיאה ביצירת המשימה או בהעלאת הקובץ.');
+      setLoading(true)
+      const resp = await fetch(`${API_BASE}/Tasks`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dto)
+      })
+      const text = await resp.text()
+      let body
+      try { body = text ? JSON.parse(text) : null } catch { body = text }
+      if (!resp.ok) throw new Error(`${resp.status} - ${typeof body === 'string' ? body : JSON.stringify(body)}`)
+      if (typeof onCreated === 'function') onCreated(body)
+      setTaskName('')
+      setDescription('')
+      setSelectedCategoryId('')
+    } catch (err) {
+      console.error('create task error', err)
+      setError(err.message || 'שגיאה ביצירת המשימה')
     } finally {
-      setIsSubmitting(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="new-task-container">
-      <h2 className="new-task-title">יצירת משימה חדשה</h2>
-      
-      <form className="new-task-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="taskName">שם המשימה:</label>
-          <input 
-            type="text" 
-            id="taskName" 
-            value={taskName}
-            onChange={(e) => setTaskName(e.target.value)}
-            required 
-            placeholder="הזן את שם המשימה"
-          />
+    <div style={{ direction: 'rtl' }}>
+      <div className="new-category-panel" style={{ padding: 12, border: '1px dashed #ccc', marginBottom: 12 }}>
+        <div style={{ fontSize: 14, color: '#666' }}>הוסף קטגוריה ראשית</div>
+        <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+          <input placeholder="שם קטגוריה" value={addingMain} onChange={e => setAddingMain(e.target.value)} />
+          <button type="button" onClick={handleCreateMain}>הוסף</button>
         </div>
+        {createMessage && <div style={{ color: 'green', marginTop: 8 }}>{createMessage}</div>}
+        {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
+      </div>
 
-        <div className="form-group">
-          <label htmlFor="parentCategoryId">קטגוריה ראשית:</label>
-          <select
-            id="parentCategoryId"
-            value={parentCategoryId}
-            onChange={(e) => {
-              const selectedParent = e.target.value;
-              setParentCategoryId(selectedParent);
-
-              const firstChild = allCategories.find(
-                (c) => String(getFatherId(c)) === String(selectedParent)
-              );
-              setChildCategoryId(firstChild ? String(getCategoryId(firstChild)) : '');
-            }}
-            className="form-select"
-            style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '16px' }}
-            disabled={isCategoriesLoading || parentCategories.length === 0}
-          >
-            {parentCategories.length === 0 ? (
-              <option value="">אין קטגוריות ראשיות</option>
-            ) : (
-              parentCategories.map((category) => (
-                <option key={getCategoryId(category)} value={String(getCategoryId(category))}>
-                  {getCategoryName(category)}
-                </option>
-              ))
-            )}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="childCategoryId">קטגוריה משנית:</label>
-          <select
-            id="childCategoryId"
-            value={childCategoryId}
-            onChange={(e) => setChildCategoryId(e.target.value)}
-            className="form-select"
-            style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '16px' }}
-            disabled={isCategoriesLoading || !parentCategoryId || childCategories.length === 0}
-          >
-            <option value="">ללא קטגוריה משנית</option>
-            {childCategories.map((category) => (
-              <option key={getCategoryId(category)} value={String(getCategoryId(category))}>
-                {getCategoryName(category)}
-              </option>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ marginBottom: 8 }}><strong>קטגוריות</strong></div>
+          <div className="category-tree">
+            {parentList.map(p => (
+              <div key={p.Id ?? p.id} style={{ marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div>{p.Name ?? p.name}</div>
+                </div>
+                <div style={{ marginLeft: 16 }}>
+                  {childrenOf(p.Id ?? p.id).map(ch => (
+                    <div key={ch.Id ?? ch.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div>{ch.Name ?? ch.name}</div>
+                    </div>
+                  ))}
+                </div>
+                {addingSubFor === (p.Id ?? p.id) && (
+                  <div style={{ marginTop: 6, marginLeft: 16, display: 'flex', gap: 8 }}>
+                    <input placeholder="שם תת קטגוריה" value={addingSubName} onChange={e => setAddingSubName(e.target.value)} />
+                    <button type="button" onClick={() => handleCreateSub(p.Id ?? p.id)}>הוסף</button>
+                    <button type="button" onClick={() => { setAddingSubFor(null); setAddingSubName('') }}>ביטול</button>
+                  </div>
+                )}
+              </div>
             ))}
-          </select>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="description">תיאור:</label>
-          <textarea 
-            id="description" 
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="הזן תיאור משימה (אופציונלי)"
-            rows="4"
-          />
+        <div style={{ flex: 1 }}>
+          <form onSubmit={handleSubmit}>
+            <div>
+              <label>כותרת</label>
+              <input value={taskName} onChange={e => setTaskName(e.target.value)} required />
+            </div>
+            <div>
+              <label>תיאור</label>
+              <textarea value={description} onChange={e => setDescription(e.target.value)} />
+            </div>
+            <div>
+              <label>תאריך/שעה</label>
+              <input type="datetime-local" value={taskDate} onChange={e => setTaskDate(e.target.value)} />
+            </div>
+            <div>
+              <label>קטגוריה</label>
+              <select value={selectedCategoryId} onChange={e => setSelectedCategoryId(e.target.value)}>
+                <option value=''>— בחר —</option>
+                {allCategories.map(c => (
+                  <option key={c.Id ?? c.id} value={c.Id ?? c.id}>{c.Name ?? c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <button type="submit" disabled={loading}>{loading ? 'שומר...' : 'צור משימה'}</button>
+              {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
+            </div>
+          </form>
         </div>
-
-        <div className="form-group">
-          <label htmlFor="fileUpload">הוסף קובץ למשימה:</label>
-          <input 
-            type="file" 
-            id="fileUpload" 
-            onChange={handleFileChange}
-          />
-        </div>
-
-        {errorMessage && <p className="error-message">{errorMessage}</p>}
-        {successMessage && <p className="success-message">{successMessage}</p>}
-
-        <button 
-          type="submit" 
-          className="submit-btn" 
-          disabled={isSubmitting || isCategoriesLoading || !taskName.trim() || !selectedCategoryId}
-        >
-          {isSubmitting ? 'שומר משימה...' : 'צור משימה'}
-        </button>
-      </form>
+      </div>
     </div>
-  );
+  )
 }

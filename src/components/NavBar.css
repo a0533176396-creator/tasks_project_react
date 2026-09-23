@@ -1,0 +1,93 @@
+.top-nav{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:6px 16px;
+  background:linear-gradient(90deg,#0d6efd,#0b5ed7);
+  color:#fff;
+  box-shadow:0 3px 12px rgba(11,78,154,0.12);
+  gap:10px;
+  z-index:1000;
+}
+/* transition for smooth shrink */
+.top-nav{transition:padding 200ms ease, box-shadow 200ms ease, background 200ms ease}
+
+.top-nav.scrolled{
+  padding:4px 12px;
+  background:linear-gradient(90deg,#0b5ed7,#0747a6);
+  box-shadow:0 4px 16px rgba(7,71,166,0.18);
+}
+.top-nav .nav-left{
+  display:flex;
+  align-items:center;
+}
+.top-nav .signin-link{
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.22);
+  color:#fff;
+  padding:4px 8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+}
+.top-nav .signin-link:hover{background:rgba(255,255,255,0.06)}
+
+.top-nav .signin-link.active{
+  background:rgba(255,255,255,0.12);
+  box-shadow:0 6px 18px rgba(11,78,154,0.18);
+  transform:translateY(-1px);
+}
+.nav-links{
+  list-style:none;
+  display:flex;
+  gap:12px;
+  margin:0;
+  padding:0;
+}
+.nav-links a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:500;
+}
+.nav-links a:hover{color:rgba(255,255,255,0.9)}
+.nav-link-button{
+  background:transparent;
+  border:none;
+  color:#fff;
+  font-weight:500;
+  cursor:pointer;
+  padding:0;
+  font-size:14px;
+}
+.nav-link-button:hover{color:rgba(255,255,255,0.9)}
+.nav-link-button.active,
+.nav-anchor.active{
+  position:relative;
+  font-weight:700;
+}
+.nav-link-button.active::after,
+.nav-anchor.active::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-6px;
+  height:3px;
+  background:rgba(255,255,255,0.95);
+  border-radius:2px;
+}
+
+/* slightly reduce signin button size when scrolled */
+.top-nav.scrolled .signin-link{
+  padding:4px 8px;
+  border-radius:5px;
+}
+
+.user-block{display:flex;align-items:center;gap:8px}
+.user-name{font-weight:600;color:rgba(255,255,255,0.95);font-size:14px}
+.signout-link{background:transparent;border:1px solid rgba(255,255,255,0.22);color:#fff;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:14px}
+.signout-link:hover{background:rgba(255,255,255,0.06)}

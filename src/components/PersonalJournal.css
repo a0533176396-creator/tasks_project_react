@@ -1,0 +1,8 @@
+.personal-journal{display:flex;justify-content:center;padding:64px 16px}
+.journal-card{max-width:900px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #e6eef8;padding:32px;border-radius:12px;box-shadow:0 10px 30px rgba(32,42,60,0.06);text-align:right}
+.journal-card h1{font-size:26px;margin-bottom:12px}
+.journal-card .welcome{color:#333;font-size:16px}
+
+.journal-actions{margin-top:18px;display:flex;justify-content:flex-start}
+.go-tasks-btn{background:#0b5ed7;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:700}
+.go-tasks-btn:hover{opacity:0.95}

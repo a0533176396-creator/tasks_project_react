@@ -1,0 +1,20 @@
+.pricing-root{
+  padding:48px 16px 72px; 
+  direction:rtl;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.pricing-intro{max-width:900px;text-align:center;margin-bottom:28px}
+.pricing-intro h1{font-size:26px;margin-bottom:8px}
+.pricing-intro p{color:#333}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;width:100%;max-width:1100px}
+.pricing-card{background:#fff;border:1px solid #e6eef8;padding:20px;border-radius:12px;box-shadow:0 8px 24px rgba(32,42,60,0.06);text-align:right}
+.pricing-card h3{margin:0 0 6px 0}
+.pricing-card .subtitle{color:#666;margin-bottom:12px}
+.price{font-size:20px;font-weight:700;color:#0b5ed7;margin-bottom:12px}
+.features{list-style:none;padding:0;margin:0 0 14px 0}
+.features li{padding:6px 0;border-top:1px dashed #eef4ff}
+.card-cta{background:#0b5ed7;color:#fff;border:none;padding:10px 12px;border-radius:8px;cursor:pointer;font-weight:600;width:100%}
+.card-cta:hover{opacity:0.95}
+.pricing-note{margin-top:14px;color:#666;font-size:13px}

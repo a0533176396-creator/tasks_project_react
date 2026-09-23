@@ -1,0 +1,8 @@
+.tips-root{display:flex;justify-content:center;padding:48px 16px 72px;direction:rtl}
+.tips-card{max-width:900px;background:#fff;border:1px solid #e6eef8;padding:28px;border-radius:10px;box-shadow:0 8px 24px rgba(32,42,60,0.06);}
+.tips-card h1{font-size:24px;margin-bottom:10px}
+.tips-card h3{margin-top:16px;margin-bottom:6px}
+.tips-card p{color:#333;line-height:1.6}
+.tips-card .cta{margin-top:20px}
+.signin-cta{background:#0b5ed7;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
+.signin-cta:hover{opacity:0.95}

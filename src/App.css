@@ -40,3 +40,9 @@
 .read-the-docs {
   color: #888;
 }
+
+/* reserve space for fixed top navbar so content isn't hidden underneath */
+body {
+  /* reserve space for fixed top navbar: smaller reserve (reduced from 1vh) */
+  padding-top:0.8vh;
+}

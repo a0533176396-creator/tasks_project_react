@@ -1,0 +1,8 @@
+.homepage{display:flex;justify-content:center;padding:48px 16px}
+.homepage-card{max-width:800px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #e6eef8;padding:28px 32px;border-radius:10px;box-shadow:0 8px 24px rgba(32,42,60,0.06);direction:rtl}
+.homepage-card h1{font-size:26px;margin-bottom:12px}
+.homepage-card .lead{font-size:16px;margin-bottom:16px;color:#222}
+.homepage-card ul{margin:10px 0 16px 0;padding-inline-start:20px}
+.homepage-cta{margin-top:18px}
+.google-cta{background:#4285f4;color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600}
+.google-cta:hover{opacity:0.95}

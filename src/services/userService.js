@@ -27,6 +27,29 @@ export const getUserById = async (id) => {
 };
 
 /**
+ * Try to fetch a user by full name. This attempts a couple of likely endpoints
+ * on the backend. If none exist, the function returns null.
+ */
+export const getUserByFullName = async (firstName, lastName) => {
+  const candidates = [
+    `${API_BASE_URL}/Users/GetUserByFullName?firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}`,
+    `${API_BASE_URL}/Users/GetByFullName/${encodeURIComponent(firstName)}/${encodeURIComponent(lastName)}`,
+    `${API_BASE_URL}/Users/GetByName?name=${encodeURIComponent(firstName + ' ' + lastName)}`
+  ]
+  for (const url of candidates) {
+    try {
+      const resp = await fetch(url)
+      if (!resp.ok) continue
+      const data = await resp.json()
+      if (data) return data
+    } catch (e) {
+      // try next
+    }
+  }
+  return null
+}
+
+/**
  * Adds a new user to the backend.
  * @param {Object} userData - The user details to add.
  * @returns {Promise<Object>} The created user object.
@@ -89,15 +112,26 @@ export const loginUser = async (username, password) => {
       throw new Error(`Failed to validate user. Server says: ${errorText}`);
     }
 
-    const isValid = await response.json();
-    
-    // אם השרת החזיר false אז המשתמש לא נמצא או שהסיסמה שגויה
-    if (!isValid) {
-      throw new Error('User not found or incorrect credentials');
+    const data = await response.json().catch(() => null);
+
+    // Handle boolean responses: false = invalid, true = server validated but didn't return user
+    if (typeof data === 'boolean') {
+      if (!data) throw new Error('User not found or incorrect credentials');
+
+      // Try to resolve a full user object by name as a fallback
+      const fallback = await getUserByFullName(firstName, lastName).catch(() => null);
+      if (fallback) return fallback;
+
+      // If fallback failed, return a minimal authenticated object
+      return { name: username, isAuthenticated: true };
     }
 
-    // ה-API מחזיר בוליאני, לכן נחזיר אובייקט בסיסי לטובת האפליקציה
-    return { name: username, isAuthenticated: true };
+    // If the server already returned an object (usersDTO), return it directly
+    if (data && typeof data === 'object') {
+      return data;
+    }
+
+    throw new Error('Unexpected login response from server');
   } catch (error) {
     console.error('Error logging in:', error);
     throw error;
