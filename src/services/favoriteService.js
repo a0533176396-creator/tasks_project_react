@@ -19,7 +19,7 @@ export const addFavorite = async (userId, categoryId) => {
   // server expects favoriet_users_categoriesDTO { user_id, category_id }
   const payload = { user_id: userId, category_id: categoryId }
   const resp = await fetch(`${API_BASE_URL}/FavoriteUserCategories/AddNewFavoriteUserCategory`, {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   })
@@ -33,15 +33,18 @@ export const addFavorite = async (userId, categoryId) => {
 
 // removeFavorite expects favoriteId
 export const removeFavorite = async (favoriteId) => {
+    debugger
   // call controller DeleteFavoriteUserCategory with favoriteId in URL
   const resp = await fetch(`${API_BASE_URL}/FavoriteUserCategories/DeleteFavoriteUserCategory/${favoriteId}`, {
     method: 'DELETE'
   })
+
   if (!resp.ok) {
     const text = await resp.text().catch(() => '')
     console.error('removeFavorite error', resp.status, text)
     throw new Error(`Failed to remove favorite ${resp.status} - ${text}`)
   }
+  
   return resp.json().catch(() => ({}))
 }
 

@@ -1,0 +1,43 @@
+.profile-page {
+  max-width: 900px;
+  margin: 24px auto;
+  padding: 16px;
+}
+.profile-form {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+.avatar-section {
+  width: 220px;
+  text-align: center;
+}
+.avatar-preview {
+  width: 160px;
+  height: 160px;
+  border-radius: 10px;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin: 6px auto;
+}
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover }
+.initials {
+  font-size: 42px;
+  color: #555;
+}
+.fields { flex: 1 }
+.fields label { display:block; margin-top:10px; font-weight:600 }
+.fields input, .fields select { width:100%; padding:8px; margin-top:6px; border:1px solid #ddd; border-radius:6px }
+.avatar-hint { font-size: 12px; color:#666; margin-top:6px }
+.actions { margin-top:14px }
+.actions button { padding:10px 14px; border:none; border-radius:6px; background:#2b7cff; color:#fff; cursor:pointer }
+.toggle-row { display:flex; align-items:center; gap:8px; margin-top:6px }
+.switch { position: relative; display: inline-block; width:44px; height:24px }
+.switch input { opacity:0; width:0; height:0 }
+.slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; transition:.2s; border-radius:24px }
+.slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background:white; transition:.2s; border-radius:50% }
+.switch input:checked + .slider { background:#4caf50 }
+.switch input:checked + .slider:before { transform: translateX(20px) }

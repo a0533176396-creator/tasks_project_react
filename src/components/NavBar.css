@@ -6,20 +6,20 @@
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:6px 16px;
-  background:linear-gradient(90deg,#0d6efd,#0b5ed7);
+  padding:9px 24px; /* increased 1.5x */
+  background:var(--primary-gradient);
   color:#fff;
-  box-shadow:0 3px 12px rgba(11,78,154,0.12);
-  gap:10px;
+  box-shadow:0 3px 12px rgba(var(--primary-rgb),0.12);
+  gap:27px; /* increased 1.5x */
   z-index:1000;
 }
 /* transition for smooth shrink */
 .top-nav{transition:padding 200ms ease, box-shadow 200ms ease, background 200ms ease}
 
 .top-nav.scrolled{
-  padding:4px 12px;
-  background:linear-gradient(90deg,#0b5ed7,#0747a6);
-  box-shadow:0 4px 16px rgba(7,71,166,0.18);
+  padding:6px 18px; /* increased 1.5x */
+  background:var(--primary-gradient-dark);
+  box-shadow:0 4px 16px rgba(var(--primary-rgb),0.16);
 }
 .top-nav .nav-left{
   display:flex;
@@ -29,7 +29,7 @@
   background:transparent;
   border:1px solid rgba(255,255,255,0.22);
   color:#fff;
-  padding:4px 8px;
+  padding:6px 12px; /* increased 1.5x */
   border-radius:6px;
   cursor:pointer;
   font-size:14px;
@@ -37,16 +37,23 @@
 .top-nav .signin-link:hover{background:rgba(255,255,255,0.06)}
 
 .top-nav .signin-link.active{
-  background:rgba(255,255,255,0.12);
-  box-shadow:0 6px 18px rgba(11,78,154,0.18);
+  background:rgba(var(--primary-rgb),0.14);
+  box-shadow:0 6px 18px rgba(var(--primary-rgb),0.16);
   transform:translateY(-1px);
 }
 .nav-links{
   list-style:none;
   display:flex;
-  gap:12px;
+  gap:36px; /* increased 1.5x */
   margin:0;
   padding:0;
+}
+
+/* Push the nav buttons toward the visual right and add space from the hamburger */
+.nav-links{
+  margin-inline-start: auto; /* respects dir (RTL/LTR) */
+  margin-inline-end: 96px; /* space from drawer/hamburger (increased 1.5x) */
+  justify-content: flex-end;
 }
 .nav-links a{
   color:#fff;
@@ -83,7 +90,7 @@
 
 /* slightly reduce signin button size when scrolled */
 .top-nav.scrolled .signin-link{
-  padding:4px 8px;
+  padding:6px 12px; /* increased 1.5x */
   border-radius:5px;
 }
 
@@ -91,3 +98,18 @@
 .user-name{font-weight:600;color:rgba(255,255,255,0.95);font-size:14px}
 .signout-link{background:transparent;border:1px solid rgba(255,255,255,0.22);color:#fff;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:14px}
 .signout-link:hover{background:rgba(255,255,255,0.06)}
+
+/* Drawer toggle positioned at the visual end of the navbar (left side in RTL) */
+.drawer-toggle{
+  position:absolute;
+  left:18px; /* increased 1.5x to match padding */
+  top:50%;
+  transform:translateY(-50%);
+  background:transparent;
+  border:none;
+  color:#fff;
+  font-size:20px;
+  cursor:pointer;
+  z-index:1100;
+}
+.drawer-toggle:focus{outline:2px solid rgba(255,255,255,0.12)}

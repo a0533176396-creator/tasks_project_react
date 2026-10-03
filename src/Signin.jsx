@@ -36,7 +36,7 @@ export default function Signin({ onSignInSuccess, onNavigateToRegister }) {
         const lastName = nameParts.slice(1).join(' ') || ''
         const full = await getUserByFullName(firstName, lastName)
         if (full) {
-          if (onSignInSuccess) onSignInSuccess({ ...full, name: username })
+          if (onSignInSuccess) onSignInSuccess(full)
         } else {
           if (onSignInSuccess) onSignInSuccess(user)
         }
@@ -72,7 +72,7 @@ export default function Signin({ onSignInSuccess, onNavigateToRegister }) {
                 if (userFromDb) {
                   setLoginError('');
                   setShowRegisterOptions(false);
-                  if (onSignInSuccess) onSignInSuccess({ ...userFromDb, name: user.name });
+                  if (onSignInSuccess) onSignInSuccess(userFromDb);
                 } else {
                   throw new Error('User not found');
                 }

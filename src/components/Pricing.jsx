@@ -24,7 +24,7 @@ export default function Pricing({ onSignIn }) {
       </div>
       <div className="pricing-grid">
         <Card
-          title="🔹 חבילה בסיסית"
+          title=" חבילה בסיסית"
           subtitle="למתחילים שרוצים לעשות סדר ביום-יום"
           price="₪0 / חינם"
           features={[
@@ -38,7 +38,7 @@ export default function Pricing({ onSignIn }) {
         />
 
         <Card
-          title="⚡ חבילה מתקדמת"
+          title=" חבילה מתקדמת"
           subtitle="למשתמשים קבועים שצריכים יותר מקום וגמישות"
           price="₪29 / לחודש"
           features={[
@@ -53,7 +53,7 @@ export default function Pricing({ onSignIn }) {
         />
 
         <Card
-          title="👑 חבילת פרימיום"
+          title=" חבילת פרימיום"
           subtitle="למקצוענים שרוצים שקט נפשי ועבודה ללא גבולות"
           price="₪59 / לחודש"
           features={[

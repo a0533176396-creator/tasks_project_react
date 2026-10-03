@@ -4,9 +4,10 @@ import { getAllCategories } from '../services/categoryService'
 import { getUserFavorites, addFavorite, removeFavorite, createAndLinkFavoriteCategory } from '../services/favoriteService'
 
 export default function FavoriteCategories({ user }) {
-  const [allCategories, setAllCategories] = useState([])
+    const [allCategories, setAllCategories] = useState([])
   const [tree, setTree] = useState([])
   const [favorites, setFavorites] = useState(new Set())
+  
   const [favoriteIdByCategory, setFavoriteIdByCategory] = useState({})
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
@@ -20,24 +21,58 @@ export default function FavoriteCategories({ user }) {
   const [addingMainName, setAddingMainName] = useState('')
 
   const refreshData = async () => {
+    
     if (!user || !user.id) return
     setLoading(true)
     try {
-      const [cats, favs] = await Promise.all([getAllCategories(), getUserFavorites(user.id)])
+      const fetchFavsSafe = async (uid) => {
+        try {
+          const r = await getUserFavorites(uid)
+          console.log(r);
+          
+          // if it looks like a usable array or contains .data array, return as-is
+          if (Array.isArray(r) || (r && Array.isArray(r.data))) return r
+        } catch (e) {
+          console.debug('getUserFavorites(uid) failed:', e)
+        }
+        try {
+          const r2 = await getUserFavorites()
+          if (Array.isArray(r2) || (r2 && Array.isArray(r2.data))) return r2
+        } catch (e2) {
+          console.debug('getUserFavorites() fallback failed:', e2)
+        }
+        return []
+      }
+
+      const [cats, favsRaw] = await Promise.all([getAllCategories(), fetchFavsSafe(user.id)])
       setAllCategories(cats || [])
       buildTree(cats || [])
-      // favs are favoriet_users_categoriesDTO { Id, user_id, category_id }
-      const categorySet = new Set((favs || []).map(f => f.category_id ?? f.CategoryId ?? f.Category_id))
+
+      // Normalize favorites response to an array
+      const favs = Array.isArray(favsRaw) ? favsRaw : (favsRaw && (Array.isArray(favsRaw.data) ? favsRaw.data : []))
+
+      // favs are expected to be favoriet_users_categoriesDTO { Id, user_id, category_id }
+      const categorySet = new Set()
       const map = {}
-      (favs || []).forEach(f => {
-        const catId = f.category_id ?? f.CategoryId ?? f.Category_id
-        const favId = f.Id ?? f.id
-        if (catId != null && favId != null) map[Number(catId)] = favId
+      ;(favs || []).forEach(f => {
+        // support several shapes: number (id), favorite DTO { category_id }, or category object { Id }
+        let rawCat = null
+        let favId = null
+        if (f == null) return
+        if (typeof f === 'number') rawCat = f
+        else if (typeof f === 'string' && f.match(/^\d+$/)) rawCat = Number(f)
+        else if (typeof f === 'object') {
+          rawCat = f.category_id ?? f.CategoryId ?? f.categoryId ?? f.Id ?? f.id ?? null
+          favId = f.Id ?? f.id ?? null
+        }
+        const catId = Number(rawCat)
+        if (!Number.isNaN(catId)) categorySet.add(catId)
+        if (!Number.isNaN(catId) && favId != null) map[catId] = favId
       })
+
       setFavorites(categorySet)
       setFavoriteIdByCategory(map)
     } catch (err) {
-      console.error(err)
       setMessage('שגיאה בטעינת קטגוריות/מועדפים: ' + (err.message || err))
     } finally {
       setLoading(false)
@@ -51,14 +86,15 @@ export default function FavoriteCategories({ user }) {
   const buildTree = (cats) => {
     const map = {}
     cats.forEach(c => {
-      const id = c.Id ?? c.id
+      const id = Number(c.Id ?? c.id)
       const name = c.Name ?? c.name
       map[id] = { id, name, children: [] }
     })
     const roots = []
     cats.forEach(c => {
-      const id = c.Id ?? c.id
-      const parent = c.father_id ?? c.father_id ?? null
+      const id = Number(c.Id ?? c.id)
+      const rawParent = c.father_id ?? c.fatherId ?? c.father ?? null
+      const parent = rawParent != null && rawParent !== '' ? Number(rawParent) : null
       if (parent == null) roots.push(map[id])
       else if (map[parent]) map[parent].children.push(map[id])
       else roots.push(map[id])
@@ -68,38 +104,101 @@ export default function FavoriteCategories({ user }) {
 
   const toggleFavorite = async (category) => {
     if (!user || !user.id) { setMessage('אין מזהה משתמש'); return }
-    const cid = category.id ?? category.Id
+    const cid = Number(category.id ?? category.Id)
+    const name = category.name ?? category.Name ?? ''
     // If it's currently a favorite, ask for confirmation before removing
     if (favorites.has(cid)) {
-      const name = category.name ?? category.Name ?? ''
-      const favId = favoriteIdByCategory[Number(cid)]
-      setConfirmRemove({ show: true, favId: favId, categoryId: cid, name })
+      const favId = favoriteIdByCategory[Number(cid)] ?? null
+      setConfirmRemove({ show: true, id: favId, categoryId: cid, name })
       return
     }
 
     // If it's not a favorite, ask for confirmation before adding
-    const name = category.name ?? category.Name ?? ''
-    setConfirmAdd({ show: true, id: Number(cid), name })
+    setConfirmAdd({ show: true, id: cid, name })
   }
 
   const handleConfirmRemove = async (confirmed) => {
-    if (!confirmed) { setConfirmRemove({ show: false, id: null, name: '' }); return }
-    const cid = confirmRemove.id
-    if (!cid || !user || !user.id) { setConfirmRemove({ show: false, id: null, name: '' }); setMessage('אין מזהה משתמש'); return }
+    if (!confirmed) { setConfirmRemove({ show: false, id: null, categoryId: null, name: '' }); return }
+    if (!user || !user.id) { setConfirmRemove({ show: false, id: null, categoryId: null, name: '' }); setMessage('אין מזהה משתמש'); return }
+
+    // prefer favoriteId (confirmRemove.id), otherwise lookup by categoryId
+    let favId = confirmRemove.id ?? null
+    const categoryId = confirmRemove.categoryId ?? null
+    if (!favId && categoryId != null) favId = favoriteIdByCategory[Number(categoryId)] ?? null
+
     try {
-      await removeFavorite(user.id, cid)
-      setFavorites(prev => {
-        const s = new Set(prev)
-        s.delete(cid)
-        return s
-      })
+      setLoading(true)
+
+      if (!favId) {
+        // try to refresh mapping and retry
+        await refreshData()
+        favId = favoriteIdByCategory[Number(categoryId)] ?? null
+      }
+
+      if (!favId) {
+        // no server favorite record found — optimistic local removal
+        setFavorites(prev => {
+          const s = new Set(prev)
+          if (categoryId != null) s.delete(Number(categoryId))
+          return s
+        })
+        setFavoriteIdByCategory(prev => {
+          const copy = { ...prev }
+          if (categoryId != null) delete copy[Number(categoryId)]
+          return copy
+        })
+        setMessage('המועדף הוסר')
+        setConfirmRemove({ show: false, id: null, categoryId: null, name: '' })
+        setLoading(false)
+        return
+      }
+
+      // call removeFavorite and prefer its response if it includes updated favorites
+      const resp = await removeFavorite(favId)
+      const updatedFavs = Array.isArray(resp) ? resp : (resp && Array.isArray(resp.data) ? resp.data : null)
+
+      if (updatedFavs) {
+        const categorySet = new Set()
+        const map = {}
+        updatedFavs.forEach(f => {
+          if (f == null) return
+          let rawCat = null
+          let favRecId = null
+          if (typeof f === 'number') rawCat = f
+          else if (typeof f === 'string' && f.match(/^\d+$/)) rawCat = Number(f)
+          else if (typeof f === 'object') {
+            rawCat = f.category_id ?? f.CategoryId ?? f.categoryId ?? f.Id ?? f.id ?? null
+            favRecId = f.Id ?? f.id ?? null
+          }
+          const catId = Number(rawCat)
+          if (!Number.isNaN(catId)) categorySet.add(catId)
+          if (!Number.isNaN(catId) && favRecId != null) map[catId] = favRecId
+        })
+        setFavorites(categorySet)
+        setFavoriteIdByCategory(map)
+      } else {
+        // fallback: optimistic removal + refresh
+        setFavorites(prev => {
+          const s = new Set(prev)
+          if (categoryId != null) s.delete(Number(categoryId))
+          return s
+        })
+        setFavoriteIdByCategory(prev => {
+          const copy = { ...prev }
+          if (categoryId != null) delete copy[Number(categoryId)]
+          return copy
+        })
+        await refreshData()
+      }
+
       setMessage('הקטגוריה הוסרה מהמועדפים')
-      setConfirmRemove({ show: false, id: null, name: '' })
-      await refreshData()
+      setConfirmRemove({ show: false, id: null, categoryId: null, name: '' })
     } catch (err) {
       console.error('remove favorite failed', err)
       setMessage('שגיאה בהסרת המועדף')
-      setConfirmRemove({ show: false, id: null, name: '' })
+      setConfirmRemove({ show: false, id: null, categoryId: null, name: '' })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -166,9 +265,10 @@ export default function FavoriteCategories({ user }) {
   }, [query, allCategories])
 
   const renderNode = (node) => {
-    const id = node.id
+    const id = Number(node.id)
     const name = node.name
     return (
+        
       <div key={`cat-${id}`} className="fc-node">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <label className="fc-node-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -305,7 +405,7 @@ export default function FavoriteCategories({ user }) {
                 <button
                   type="button"
                   onClick={() => { setAddingMain(true); setAddingMainName('') }}
-                  style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #ccc', background: '#fff' }}
+                  style={{textAlign:"right" ,padding: '6px 10px', borderRadius: 6, border: '1px solid #ccc', background: '#fff' }}
                 >
                   הוסף קטגוריה ראשית
                 </button>

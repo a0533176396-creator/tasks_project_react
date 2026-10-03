@@ -20,6 +20,6 @@
 .landing-card ul{margin-left:16px;margin-bottom:10px}
 .cta-row{display:flex;align-items:center;gap:14px;margin-top:18px}
 .primary-cta{
-  background:#007bff;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600
+  background:var(--primary-500);color:var(--primary-contrast);border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600
 }
-.primary-cta:hover{opacity:0.95}
+.primary-cta:hover{background:var(--primary-600)}

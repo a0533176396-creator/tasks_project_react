@@ -7,19 +7,20 @@
 }
 
 .assistant-toggle-btn {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--primary-500);
+  color: var(--primary-contrast);
   border: none;
   border-radius: 20px;
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.3s;
+  box-shadow: 0 6px 18px rgba(var(--primary-rgb),0.12);
+  transition: background-color 0.3s, box-shadow 0.2s;
 }
 
 .assistant-toggle-btn:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-600);
+  box-shadow: 0 8px 22px rgba(var(--primary-rgb),0.14);
 }
 
 .chat-window {
@@ -35,8 +36,8 @@
 }
 
 .chat-header {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--primary-500);
+  color: var(--primary-contrast);
   padding: 10px;
   display: flex;
   justify-content: space-between;
@@ -47,7 +48,7 @@
 .close-btn {
   background: none;
   border: none;
-  color: white;
+  color: var(--primary-contrast);
   font-size: 20px;
   cursor: pointer;
 }
@@ -71,8 +72,8 @@
 
 .message.user {
   align-self: flex-end;
-  background-color: #007bff;
-  color: white;
+  background-color: var(--primary-500);
+  color: var(--primary-contrast);
   border-bottom-right-radius: 0;
 }
 
@@ -100,8 +101,8 @@
 }
 
 .chat-input-area button {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--primary-500);
+  color: var(--primary-contrast);
   border: none;
   border-radius: 5px;
   padding: 8px 15px;
@@ -110,5 +111,9 @@
 }
 
 .chat-input-area button:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-600);
+}
+
+.file-upload-btn{
+  color: var(--primary-500);
 }

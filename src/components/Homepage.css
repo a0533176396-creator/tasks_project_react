@@ -4,5 +4,5 @@
 .homepage-card .lead{font-size:16px;margin-bottom:16px;color:#222}
 .homepage-card ul{margin:10px 0 16px 0;padding-inline-start:20px}
 .homepage-cta{margin-top:18px}
-.google-cta{background:#4285f4;color:#fff;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600}
-.google-cta:hover{opacity:0.95}
+.google-cta{background:var(--primary-500);color:var(--primary-contrast);border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600}
+.google-cta:hover{background:var(--primary-600)}

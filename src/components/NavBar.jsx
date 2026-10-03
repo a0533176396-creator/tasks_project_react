@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './NavBar.css'
 
-function NavBar({ onShowSignin, onNavigateHome, onShowBlog, onShowPackages, onShowTips, onShowFavorites, currentView = 'home', currentUser, onSignOut, showSignin }) {
+function NavBar({ onShowSignin, onNavigateHome, onShowBlog, onShowPackages, onShowTips, onShowFavorites, onShowJournal, onShowProfile, onToggleDrawer, currentView = 'home', currentUser, onSignOut, showSignin }) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -13,12 +13,21 @@ function NavBar({ onShowSignin, onNavigateHome, onShowBlog, onShowPackages, onSh
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const displayName = (() => {
+    if (!currentUser) return ''
+    // prefer DB fields: first_name / last_name, then variants, then email
+    const first = currentUser.first_name || currentUser.FirstName || currentUser.firstName || ''
+    const last = currentUser.last_name || currentUser.LastName || currentUser.lastName || ''
+    const full = (first || last) ? `${first}${last ? ' ' + last : ''}`.trim() : (currentUser.userName || currentUser.name || currentUser.email || '')
+    return full || 'משתמש'
+  })()
+
   return (
     <nav className={`top-nav ${scrolled ? 'scrolled' : ''}`} dir="rtl">
       <div className="nav-left">
         {currentUser ? (
           <div className="user-block">
-            <span className="user-name">מחובר כ: { (currentUser.name || currentUser.userName || currentUser.email || '').split(' ')[0] || 'משתמש' }</span>
+            <span className="user-name">הנך מחובר/ת כ: {displayName}</span>
             <button className="signout-link" onClick={onSignOut}>התנתקות</button>
           </div>
         ) : (
@@ -53,6 +62,7 @@ function NavBar({ onShowSignin, onNavigateHome, onShowBlog, onShowPackages, onSh
             החבילות שלנו
           </button>
         </li>
+        {/* Removed: journal and profile links — moved to side drawer */}
         <li>
           <button
             type="button"
@@ -62,16 +72,11 @@ function NavBar({ onShowSignin, onNavigateHome, onShowBlog, onShowPackages, onSh
             טיפים לניהול משימות
           </button>
         </li>
-        <li>
-          <button
-            type="button"
-            className={`nav-link-button ${currentView === 'favorites' ? 'active' : ''}`}
-            onClick={onShowFavorites}
-          >
-            הקטגוריות המועדפות
-          </button>
-        </li>
+        {/* Removed: favorites link — moved to side drawer */}
       </ul>
+      {currentUser && (
+        <button className="drawer-toggle" onClick={onToggleDrawer} aria-label="פתח תפריט">☰</button>
+      )}
     </nav>
   )
 }

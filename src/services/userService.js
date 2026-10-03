@@ -137,3 +137,30 @@ export const loginUser = async (username, password) => {
     throw error;
   }
 };
+
+/**
+ * Updates a user's profile on the backend.
+ * Accepts a user object. If `AvatarBase64` is present it will be sent as part of the JSON payload.
+ */
+export const updateProfile = async (user) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/Users/UpdateUser/${user.id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(user),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '')
+      throw new Error(`HTTP error! status: ${response.status} ${text}`);
+    }
+
+    const data = await response.json().catch(() => null);
+    return data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+}

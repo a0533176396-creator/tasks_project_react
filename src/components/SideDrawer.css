@@ -1,0 +1,30 @@
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: flex-end; /* RTL: drawer comes from right */
+  align-items: center; /* center vertically so drawer can be shorter */
+  z-index: 120;
+}
+.side-drawer {
+  width: 300px;
+  max-width: 85%;
+  height: 33vh; /* one-third of viewport height */
+  background: #fff;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.2);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(0);
+  animation: slideIn .22s ease-out;
+  border-radius: 8px;
+  margin: 0 12px; /* small gap from edge */
+}
+.drawer-header { display:flex; align-items:center; justify-content:space-between }
+.drawer-close { border:none; background:transparent; font-size:18px; cursor:pointer }
+.drawer-links { margin-top:18px; display:flex; flex-direction:column; gap:8px }
+.drawer-link { text-align:right; padding:10px 12px; border-radius:8px; border:none; background:#f4f6fb; cursor:pointer }
+.drawer-link:hover { background:#e8eefb }
+
+@keyframes slideIn { from { transform: translateX(14px); opacity:0 } to { transform: translateX(0); opacity:1 } }

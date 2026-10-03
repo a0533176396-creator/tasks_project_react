@@ -84,6 +84,13 @@ console.log(user)
     await fetchTasks()
   }
 
+  const goToDate = (date) => {
+    if (!date) return
+    const d = new Date(date)
+    d.setHours(0,0,0,0)
+    setWeekStart(d)
+  }
+
   const prevWeek = () => {
     const d = new Date(weekStart)
     d.setDate(d.getDate() - 7)
@@ -109,11 +116,14 @@ console.log(user)
         {error && <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>}
         {!loading && !error && (
           <WeeklyCalendar
+            user={user}
             tasks={tasks}
             weekStart={weekStart}
             onPrevWeek={prevWeek}
             onNextWeek={nextWeek}
             onCurrentWeek={currentWeek}
+            onAddTask={handleAddTask}
+            onGoToDate={goToDate}
           />
         )}
       </div>

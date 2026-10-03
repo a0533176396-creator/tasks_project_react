@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './VirtualAssistant.css';
 
 const VirtualAssistant = ({ currentUser }) => {
@@ -11,6 +11,10 @@ const VirtualAssistant = ({ currentUser }) => {
   
   // sessionId מנהל את מזהה השיחה (0 מורה לשרת ליצור שיחה חדשה)
   const [sessionId, setSessionId] = useState(0);
+  // ref that holds a Promise while a CreateSession request is in-flight
+  const creatingSessionRef = useRef(null);
+  // prev user ref to detect transitions from not-logged-in -> logged-in
+  const prevUserRef = useRef(currentUser);
 
   const getGreeting = () => {
     const d = new Date();
@@ -30,8 +34,18 @@ const VirtualAssistant = ({ currentUser }) => {
     }
 
     if (currentUser) {
-      const firstName = (currentUser.name || currentUser.userName || currentUser.title || currentUser.email || '').split(' ')[0];
-      if (firstName) {
+      // compute displayName the same way as NavBar: prefer first/last, then name/userName/email
+      const first = currentUser.first_name || currentUser.FirstName || currentUser.firstName || '';
+      const last = currentUser.last_name || currentUser.LastName || currentUser.lastName || '';
+      const fallback = currentUser.userName || currentUser.name || currentUser.email || '';
+      const full = (first || last) ? `${first}${last ? ' ' + last : ''}`.trim() : (fallback || '');
+      const displayName = full || '';
+      if (displayName) {
+        // prefer addressing by first name: take the first token, and if it's an email take the part before @
+        let firstName = displayName.split(' ')[0] || displayName;
+        if (firstName.includes('@')) {
+          firstName = firstName.split('@')[0];
+        }
         return `${greeting} ${firstName}! איך אוכל לעזור לך היום?`;
       }
     }
@@ -44,11 +58,50 @@ const VirtualAssistant = ({ currentUser }) => {
     }
   }, [currentUser]);
 
+  // When currentUser changes from null -> user (explicit login), start a new conversation
+  useEffect(() => {
+    if (!prevUserRef.current && currentUser) {
+      // user has just logged in
+      handleNewConversation();
+    }
+    prevUserRef.current = currentUser;
+  }, [currentUser]);
+
   const handleToggle = () => {
     setIsOpen(!isOpen);
     if (!isOpen && messages.length <= 1) {
       setMessages([{ id: 1, text: getGreeting(), sender: 'bot' }]);
     }
+  };
+
+  // Ensure there is a valid sessionId. If none, create a new session and return its id.
+  const createSessionIfNeeded = async () => {
+    if (Number(sessionId) > 0) return sessionId;
+    if (creatingSessionRef.current) return creatingSessionRef.current;
+
+    const promise = (async () => {
+      const activeUserId = currentUser && (currentUser.id || currentUser.userId) ? Number(currentUser.id || currentUser.userId) : 0;
+      const title = encodeURIComponent('שיחה חדשה');
+      setIsCreatingSession(true);
+      try {
+        const resp = await fetch(`https://localhost:44354/api/ChatSessions/CreateNewSession?userId=${activeUserId}&title=${title}`, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: ''
+        });
+        if (!resp.ok) throw new Error(`Network response status: ${resp.status}`);
+        const data = await resp.json();
+        const newSessionId = typeof data === 'number' ? data : (data.sessionId || data.SessionId || data.id || 0);
+        setSessionId(Number(newSessionId) || 0);
+        return Number(newSessionId) || 0;
+      } finally {
+        creatingSessionRef.current = null;
+        setIsCreatingSession(false);
+      }
+    })();
+
+    creatingSessionRef.current = promise;
+    return promise;
   };
 
   const handleSend = async () => {
@@ -67,8 +120,10 @@ const VirtualAssistant = ({ currentUser }) => {
 
     // מזהה המשתמש: נלקח מ-currentUser, במידה ולא מחובר מועבר 0
     const activeUserId = (currentUser && (currentUser.id || currentUser.userId)) ? (currentUser.id || currentUser.userId) : 0;
-
     try {
+      // Ensure we have a valid sessionId before sending
+      const ensuredSessionId = await createSessionIfNeeded();
+
       const response = await fetch('https://localhost:44354/api/Messages/send', {
         method: 'POST',
         headers: {
@@ -76,7 +131,7 @@ const VirtualAssistant = ({ currentUser }) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          sessionId: sessionId || 0,
+          sessionId: ensuredSessionId || 0,
           userId: Number(activeUserId),
           text: currentText
         })
@@ -97,8 +152,7 @@ const VirtualAssistant = ({ currentUser }) => {
         ...prev,
         { 
           id: Date.now() + 1, 
-          text: data.reply || data.text || data.message || data.contentURL || "קיבלתי את ההודעה.", 
-          sender: 'bot' 
+          text: data.TextContent || data.textContent || "קיבלתי את ההודעה.",          sender: 'bot' 
         }
       ]);
     } catch (error) {
@@ -156,17 +210,18 @@ const VirtualAssistant = ({ currentUser }) => {
       {isOpen && (
         <div className="chat-window">
           <div className="chat-header">
-            <span>בוטי כאן בשבילך!</span>
             <button
               className="new-convo-btn"
               onClick={handleNewConversation}
               title="שיחה חדשה"
-              style={{ marginInlineStart: '8px', fontSize: '18px' }}
+              style={{ marginInlineStart: '6px', fontSize: '12px' }}
               disabled={isCreatingSession}
               aria-busy={isCreatingSession}
             >
               {isCreatingSession ? '⏳' : '➕'}
-            </button>
+            </button>   
+                     <span>בוטי כאן בשבילך!</span>
+
             <button className="close-btn" onClick={handleToggle}>&times;</button>
           </div>
           <div className="chat-messages">
@@ -199,7 +254,7 @@ const VirtualAssistant = ({ currentUser }) => {
               onKeyPress={handleKeyPress}
               disabled={isLoading}
             />
-            <button onClick={handleSend} disabled={isLoading}>שלח</button>
+            <button onClick={handleSend} disabled={isLoading || isCreatingSession}>שלח</button>
           </div>
         </div>
       )}

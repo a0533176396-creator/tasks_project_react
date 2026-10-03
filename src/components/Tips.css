@@ -4,5 +4,5 @@
 .tips-card h3{margin-top:16px;margin-bottom:6px}
 .tips-card p{color:#333;line-height:1.6}
 .tips-card .cta{margin-top:20px}
-.signin-cta{background:#0b5ed7;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
+.signin-cta{background:var(--primary-500);color:var(--primary-contrast);border:none;padding:10px 14px;border-radius:8px;cursor:pointer}
 .signin-cta:hover{opacity:0.95}
